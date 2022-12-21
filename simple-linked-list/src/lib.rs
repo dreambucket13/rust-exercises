@@ -1,14 +1,22 @@
-use std::iter::FromIterator;
+use std::{iter::FromIterator, ptr::null};
 
-pub struct SimpleLinkedList<T> {
-    // Delete this field
-    // dummy is needed to avoid unused parameter error during compilation
-    dummy: ::std::marker::PhantomData<T>,
+pub struct Node<T>{
+
+    data: T,
+    next: Option<Box<Node<T>>>,
 }
 
-impl<T> SimpleLinkedList<T> {
+pub struct SimpleLinkedList<T> {
+
+    head: Option<Box<Node<T>>>,
+    tail: Option<Box<Node<T>>>,
+    length: usize,
+    
+}
+
+impl<'a, T> SimpleLinkedList<T> {
     pub fn new() -> Self {
-        unimplemented!()
+        Self { head: (None), tail: (None), length: (0) }
     }
 
     // You may be wondering why it's necessary to have is_empty()
@@ -17,19 +25,40 @@ impl<T> SimpleLinkedList<T> {
     // whereas is_empty() is almost always cheap.
     // (Also ask yourself whether len() is expensive for SimpleLinkedList)
     pub fn is_empty(&self) -> bool {
-        unimplemented!()
+
+        match self.head {
+            None => true,
+            _ => false
+        }
+
     }
 
     pub fn len(&self) -> usize {
-        unimplemented!()
+        
+        self.length
+
     }
 
     pub fn push(&mut self, _element: T) {
-        unimplemented!()
+
+        let mut _new_node = Box::new(Node { data: (_element), next: (self.head.take())});
+
+        self.head = Some(_new_node);
+
+        self.length += 1;
+
+
     }
 
     pub fn pop(&mut self) -> Option<T> {
-        unimplemented!()
+
+        let popped_node = self.head.take().unwrap();
+        self.head = popped_node.next;
+
+        self.length -= 1;
+
+        Some(popped_node.data)
+
     }
 
     pub fn peek(&self) -> Option<&T> {
@@ -42,7 +71,7 @@ impl<T> SimpleLinkedList<T> {
     }
 }
 
-impl<T> FromIterator<T> for SimpleLinkedList<T> {
+impl<'a, T> FromIterator<T> for SimpleLinkedList<T> {
     fn from_iter<I: IntoIterator<Item = T>>(_iter: I) -> Self {
         unimplemented!()
     }
@@ -59,7 +88,7 @@ impl<T> FromIterator<T> for SimpleLinkedList<T> {
 // of IntoIterator is that implementing that interface is fairly complicated, and
 // demands more of the student than we expect at this point in the track.
 
-impl<T> From<SimpleLinkedList<T>> for Vec<T> {
+impl<'a, T> From<SimpleLinkedList<T>> for Vec<T> {
     fn from(mut _linked_list: SimpleLinkedList<T>) -> Vec<T> {
         unimplemented!()
     }
