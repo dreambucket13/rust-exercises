@@ -2,7 +2,7 @@ use std::{iter::FromIterator, ptr::null};
 
 pub struct Node<T>{
 
-    data: T,
+    data: Option<T>,
     next: Option<Box<Node<T>>>,
 }
 
@@ -41,7 +41,7 @@ impl<'a, T> SimpleLinkedList<T> {
 
     pub fn push(&mut self, _element: T) {
 
-        let mut _new_node = Box::new(Node { data: (_element), next: (self.head.take())});
+        let mut _new_node = Box::new(Node { data: (Some(_element)), next: (self.head.take())});
 
         self.head = Some(_new_node);
 
@@ -52,17 +52,29 @@ impl<'a, T> SimpleLinkedList<T> {
 
     pub fn pop(&mut self) -> Option<T> {
 
+        if self.head.is_none() {
+            return None;
+        }
+
         let popped_node = self.head.take().unwrap();
-        self.head = popped_node.next;
+        let _popped_data = popped_node.data.as_ref().unwrap();
 
         self.length -= 1;
 
-        Some(popped_node.data)
+        self.head = popped_node.next;
+        return popped_node.data;
+        
 
     }
 
     pub fn peek(&self) -> Option<&T> {
-        unimplemented!()
+
+        if self.head.is_none() {
+            return None;
+        }
+
+        let peeked = self.head.as_ref().unwrap();
+        peeked.data.as_ref()
     }
 
     #[must_use]
