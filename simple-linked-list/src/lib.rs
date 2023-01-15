@@ -80,6 +80,9 @@ impl<T: Clone + Copy> SimpleLinkedList<T> {
         
         let mut reversed = SimpleLinkedList::new();
 
+        //we borrow a reference to the head node and then clone elements.   
+        //we don't want to destroy the original linked list by using pop()
+
         let mut node = &self.head;
 
         while node.is_some() {
@@ -124,6 +127,9 @@ impl<T: Clone + Copy> From<SimpleLinkedList<T>> for Vec<T> {
     fn from(_linked_list: SimpleLinkedList<T>) -> Vec<T> {
         
         let mut list = Vec::new();
+
+        //we borrow a reference to the head node and then clone elements.   
+        //we don't want to destroy the original linked list by using pop()
 
         let mut node = &_linked_list.head;
 
