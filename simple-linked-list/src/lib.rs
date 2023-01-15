@@ -1,20 +1,19 @@
-use std::{iter::FromIterator, ptr::null};
+use std::{iter::FromIterator};
 
-#[derive(Debug, Clone)]
-pub struct Node<T>{
-
+#[derive(Clone)]
+struct Node<T: Clone + Copy> {
     data: T,
     next: Option<Box<Node<T>>>,
 }
 
-pub struct SimpleLinkedList<T> {
+pub struct SimpleLinkedList<T: Clone + Copy> {
 
     head: Option<Box<Node<T>>>,
     length: usize,
     
 }
 
-impl<'a, T> SimpleLinkedList<T> {
+impl<T: Clone + Copy> SimpleLinkedList<T> {
     pub fn new() -> Self {
         Self { head: (None), length: (0) }
     }
@@ -77,12 +76,18 @@ impl<'a, T> SimpleLinkedList<T> {
     }
 
     #[must_use]
-    pub fn rev(mut self) -> SimpleLinkedList<T> {
+    pub fn rev(self) -> SimpleLinkedList<T> {
         
         let mut reversed = SimpleLinkedList::new();
 
-        while let Some(node) = self.pop() {
-            reversed.push(node);
+        let mut node = &self.head;
+
+        while node.is_some() {
+
+            let element = node.as_ref().unwrap().data.clone();
+            reversed.push(element);
+            node = &node.as_ref().unwrap().next;
+            
         }
 
         reversed
@@ -90,7 +95,7 @@ impl<'a, T> SimpleLinkedList<T> {
     }
 }
 
-impl<'a, T> FromIterator<T> for SimpleLinkedList<T> {
+impl<T: Clone + Copy> FromIterator<T> for SimpleLinkedList<T> {
     fn from_iter<I: IntoIterator<Item = T>>(_iter: I) -> Self {
 
         let mut list = SimpleLinkedList::new();
@@ -115,17 +120,22 @@ impl<'a, T> FromIterator<T> for SimpleLinkedList<T> {
 // of IntoIterator is that implementing that interface is fairly complicated, and
 // demands more of the student than we expect at this point in the track.
 
-impl<'a, T> From<SimpleLinkedList<T>> for Vec<T> {
-    fn from(mut _linked_list: SimpleLinkedList<T>) -> Vec<T> {
+impl<T: Clone + Copy> From<SimpleLinkedList<T>> for Vec<T> {
+    fn from(_linked_list: SimpleLinkedList<T>) -> Vec<T> {
         
         let mut list = Vec::new();
 
-        while _linked_list.head.is_some() {
-            let node = _linked_list.pop();
-            let element = node.unwrap();
+        let mut node = &_linked_list.head;
+
+        while node.is_some() {
+
+            let element = node.as_ref().unwrap().data.clone();
             list.insert(0, element);
+            node = &node.as_ref().unwrap().next;
+            
         }
 
         list
+
     }
 }
