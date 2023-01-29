@@ -5,7 +5,6 @@
 pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
     
     //parse hands
-
     let mut best_hands: Vec<&'a str> = Vec::new();
     let mut parsed_hands:Vec<Hand> = Vec::new();
 
@@ -42,9 +41,15 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
         parsed_hands.push(hand);
 
-
-
     }
+
+    //assign ranks
+
+
+
+
+    
+    //push highest ranks to best hands
 
     //only for first test
     best_hands.push(parsed_hands[0].hand_string);
@@ -54,12 +59,70 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
 }
 
-/*
+fn assign_rank(hand_to_score: &mut Hand){
 
-let mut split = "some string 123 ffd".split("123");
-let vec: Vec<&str> = split.collect();
+    type HandDetectFunction  = fn(&mut Hand);
 
-*/
+    let hand_detect_function: [HandDetectFunction; 9] = [detect_straight_flush,
+                                                        detect_four_of_a_kind,
+                                                        detect_full_house,
+                                                        detect_flush,
+                                                        detect_straight,
+                                                        detect_three_of_a_kind,
+                                                        detect_two_pair,                                                            
+                                                        detect_one_pair,
+                                                        detect_high_card];
+
+                                                        
+    for index in 0..hand_detect_function.len(){
+
+        hand_detect_function[index](hand_to_score);
+        
+        if hand_to_score.primary_rank != PrimaryRanks::NoRank{
+            break;
+        }
+
+    }
+
+}
+
+
+fn detect_straight_flush(hand_to_score: &mut Hand) {
+    //detect straight flush - contains five cards of sequential rank, all of the same suit
+}
+
+fn detect_four_of_a_kind(hand_to_score: &mut Hand) {
+    
+}
+
+fn detect_full_house(hand_to_score: &mut Hand) {
+    
+}
+
+fn detect_flush(hand_to_score: &mut Hand) {
+    
+}
+
+fn detect_straight(hand_to_score: &mut Hand) {
+    
+}
+
+fn detect_three_of_a_kind(hand_to_score: &mut Hand) {
+    
+}
+
+fn detect_two_pair(hand_to_score: &mut Hand) {
+    
+}
+
+fn detect_one_pair(hand_to_score: &mut Hand) {
+    
+}
+
+fn detect_high_card(hand_to_score: &mut Hand) {
+    
+}
+
 
 fn str_to_card_value(str: &str) -> CardValues {
 
@@ -114,13 +177,14 @@ struct Hand<'a> {
 
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 struct Card {
 
     suit: Suits,
     value: CardValues
 }
 
+#[derive(Debug, PartialEq, PartialOrd)]
 enum PrimaryRanks {
 
     NoRank,
@@ -136,7 +200,7 @@ enum PrimaryRanks {
 
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 enum Suits{
 
     NoSuit,
@@ -146,7 +210,7 @@ enum Suits{
     SPADES
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 enum CardValues{
 
     NoValue = 0,
