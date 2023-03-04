@@ -125,8 +125,8 @@ fn detect_four_of_a_kind(hand_to_score: &mut Hand) -> bool {
 
         hand_to_score.primary_rank = PrimaryRanks::FourOfAKind;
 
+        //set secondary rank to the value of the remaining card (value count == 1)
         let index = hand_to_score.value_count.iter().position(|&x| x == 1).unwrap();
-
         hand_to_score.secondary_rank.push(usize_to_card_value(index));
 
         return true;
@@ -137,7 +137,19 @@ fn detect_four_of_a_kind(hand_to_score: &mut Hand) -> bool {
 
 fn detect_full_house(hand_to_score: &mut Hand) -> bool {
 
+    if hand_to_score.value_count.contains(&3) && hand_to_score.value_count.contains(&2){
 
+        hand_to_score.primary_rank = PrimaryRanks::FullHouse;
+
+        //set secondary rank to the rank of the triplet, then to the pair
+        let mut index = hand_to_score.value_count.iter().position(|&x| x == 3).unwrap();
+        hand_to_score.secondary_rank.push(usize_to_card_value(index));
+
+        index = hand_to_score.value_count.iter().position(|&x| x == 2).unwrap();
+        hand_to_score.secondary_rank.push(usize_to_card_value(index));
+
+        return true;
+    }
 
     false
     
@@ -202,7 +214,22 @@ fn detect_straight(hand_to_score: &mut Hand) -> bool {
 
 fn detect_three_of_a_kind(hand_to_score: &mut Hand) -> bool{
 
+    if hand_to_score.value_count.contains(&3) {
 
+        hand_to_score.primary_rank = PrimaryRanks::ThreeOfAKind;
+
+        //Each three of a kind is ranked first by the rank of its triplet, 
+        //then by the rank of its highest-ranking kicker, and finally by the rank of its lowest-ranking kicker
+
+        let mut index = hand_to_score.value_count.iter().position(|&x| x == 3).unwrap();
+        hand_to_score.secondary_rank.push(usize_to_card_value(index));
+
+        //iterate through value count - if the count is 2, push only once
+
+        
+
+        return true;
+    }
 
     false
     
