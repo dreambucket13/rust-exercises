@@ -222,12 +222,24 @@ fn detect_three_of_a_kind(hand_to_score: &mut Hand) -> bool{
         //then by the rank of its highest-ranking kicker, and finally by the rank of its lowest-ranking kicker
 
         let mut index = hand_to_score.value_count.iter().position(|&x| x == 3).unwrap();
-        hand_to_score.secondary_rank.push(usize_to_card_value(index));
+
 
         //iterate through value count - if the count is 2, push only once
 
-        
+        for kicker_index in 0..hand_to_score.value_count.len() {
 
+            if hand_to_score.value_count[kicker_index] == 2 {
+                hand_to_score.secondary_rank.push(usize_to_card_value(kicker_index));
+                break; //pushing only once
+            }
+
+            if hand_to_score.value_count[kicker_index] == 1 {
+                hand_to_score.secondary_rank.push(usize_to_card_value(kicker_index));
+            }
+
+        }
+
+        
         return true;
     }
 
@@ -236,6 +248,36 @@ fn detect_three_of_a_kind(hand_to_score: &mut Hand) -> bool{
 }
 
 fn detect_two_pair(hand_to_score: &mut Hand) -> bool{
+
+    //look for 2 values of two
+
+    let mut pair_count = 0;
+    let mut two_pair_indicies:[usize;2] = [0,2];
+    let mut kicker_index: usize = 0;
+
+
+    for index in 0..hand_to_score.value_count.len() {
+
+        if hand_to_score.value_count[index] == 2 {
+            pair_count += 1;
+        }
+
+        if hand_to_score.value_count[index] == 1 {
+            kicker_index = index;
+        }
+
+    }
+
+    if pair_count == 2_{
+        hand_to_score.primary_rank = PrimaryRanks::TwoPair;
+
+        for secondary_rank_index in 0..two_pair_indicies.len(){
+            hand_to_score.secondary_rank.push(usize_to_card_value(secondary_rank_index));
+        }
+
+        //now push the single card
+        hand_to_score.secondary_rank.push(usize_to_card_value(kicker_index));
+    }
 
     false
     
