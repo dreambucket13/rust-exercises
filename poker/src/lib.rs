@@ -252,6 +252,8 @@ fn detect_two_pair(hand_to_score: &mut Hand) -> bool{
     //look for 2 values of two
 
     let mut pair_count = 0;
+
+    //TODO need to change this to a vec so I can just push...
     let mut two_pair_indicies:[usize;2] = [0,2];
     let mut kicker_index: usize = 0;
 
