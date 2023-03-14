@@ -5,7 +5,8 @@
 pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
     
     //parse hands
-    let mut best_hands: Vec<&'a str> = Vec::new();
+    let mut best_hands: Vec<Hand> = Vec::new();
+    let mut best_hand_strings: Vec<&'a str> = Vec::new();
     let mut parsed_hands:Vec<Hand> = Vec::new();
 
     for hand_input in 0..hands.len() {
@@ -58,23 +59,50 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
     //assign ranks
 
-
-
     for hand_to_score in &mut parsed_hands {
         assign_rank(hand_to_score);
     }
 
 
     
-    //push highest ranks to best hands
+    //push winning hands (can tie)
 
-    //only for first test
-    best_hands.push(parsed_hands[0].hand_string);
 
-    best_hands
+    //find highest rank
+    for hand in parsed_hands {
+
+        let mut highest_hand_rank = PrimaryRanks::NoRank;
+
+        if hand.primary_rank > highest_hand_rank {
+            //update the highest rank
+            highest_hand_rank = hand.primary_rank;
+            //clear the best hands vec since I found something better
+            best_hands.clear();
+            //push to best hands again
+            best_hands.push(hand);
+
+        } else if hand.primary_rank == highest_hand_rank {
+            //if it's equal, could be a tie
+            //TODO - handle ties, check secondary rank?
+            best_hands.push(hand);
+        }
+
+    }
+
+
+    best_hand_strings
 
 
 }
+
+fn tiebreak(best_hands: &mut Vec<Hand> ){
+
+    let mut highest_secondary_rank = CardValues::NoValue;
+
+
+
+}
+
 
 fn assign_rank(hand_to_score: &mut Hand){
 
@@ -94,6 +122,7 @@ fn assign_rank(hand_to_score: &mut Hand){
     for index in 0..hand_detect_function.len(){
         
         if hand_detect_function[index](hand_to_score) == true{
+            //break out of loop once one of the functions returns true
             break;
         }
 
@@ -221,8 +250,8 @@ fn detect_three_of_a_kind(hand_to_score: &mut Hand) -> bool{
         //Each three of a kind is ranked first by the rank of its triplet, 
         //then by the rank of its highest-ranking kicker, and finally by the rank of its lowest-ranking kicker
 
-        let mut index = hand_to_score.value_count.iter().position(|&x| x == 3).unwrap();
-
+        let index = hand_to_score.value_count.iter().position(|&x| x == 3).unwrap();
+        hand_to_score.secondary_rank.push(usize_to_card_value(index));
 
         //iterate through value count - if the count is 2, push only once
 
@@ -253,8 +282,7 @@ fn detect_two_pair(hand_to_score: &mut Hand) -> bool{
 
     let mut pair_count = 0;
 
-    //TODO need to change this to a vec so I can just push...
-    let mut two_pair_indicies:[usize;2] = [0,2];
+    let mut two_pair_indicies:Vec<usize> = Vec::new();
     let mut kicker_index: usize = 0;
 
 
@@ -262,6 +290,7 @@ fn detect_two_pair(hand_to_score: &mut Hand) -> bool{
 
         if hand_to_score.value_count[index] == 2 {
             pair_count += 1;
+            two_pair_indicies.push(index);
         }
 
         if hand_to_score.value_count[index] == 1 {
@@ -270,7 +299,7 @@ fn detect_two_pair(hand_to_score: &mut Hand) -> bool{
 
     }
 
-    if pair_count == 2_{
+    if pair_count == 2 {
         hand_to_score.primary_rank = PrimaryRanks::TwoPair;
 
         for secondary_rank_index in 0..two_pair_indicies.len(){
@@ -286,6 +315,44 @@ fn detect_two_pair(hand_to_score: &mut Hand) -> bool{
 }
 
 fn detect_one_pair(hand_to_score: &mut Hand) -> bool{
+
+    //for now, essentially the same as 2 pair.
+
+    let mut pair_count = 0;
+
+    let mut one_pair_index: usize = 0;
+    let mut kicker_indecies: Vec<usize> = Vec::new();
+
+
+    for index in 0..hand_to_score.value_count.len() {
+
+        if hand_to_score.value_count[index] == 2 {
+            pair_count += 1;
+            one_pair_index = index;
+        }
+
+        if hand_to_score.value_count[index] == 1 {
+            kicker_indecies.push(index);
+        }
+
+    }
+
+    if pair_count == 1 {
+
+        hand_to_score.primary_rank = PrimaryRanks::OnePair;
+
+        //push the rank of the pair single card
+        hand_to_score.secondary_rank.push(usize_to_card_value(one_pair_index));
+
+
+        //push remaining 3 cards
+        for secondary_rank_index in 0..kicker_indecies.len(){
+            hand_to_score.secondary_rank.push(usize_to_card_value(secondary_rank_index));
+        }
+
+
+    }
+
     false
 }
 
@@ -364,7 +431,7 @@ fn str_to_suit(str: &str) -> Suits {
 
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Hand<'a> {
 
     hand_string: &'a str,
@@ -376,14 +443,14 @@ struct Hand<'a> {
 
 }
 
-#[derive(Debug, PartialEq, PartialOrd)]
+#[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
 struct Card {
 
     suit: Suits,
     value: CardValues
 }
 
-#[derive(Debug, PartialEq, PartialOrd)]
+#[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
 enum PrimaryRanks {
 
     NoRank,
@@ -399,7 +466,7 @@ enum PrimaryRanks {
 
 }
 
-#[derive(Debug, PartialEq, PartialOrd)]
+#[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
 enum Suits{
 
     NoSuit,
