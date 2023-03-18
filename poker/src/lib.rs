@@ -69,9 +69,10 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
 
     //find highest rank
-    for hand in parsed_hands {
 
-        let mut highest_hand_rank = PrimaryRanks::NoRank;
+    let mut highest_hand_rank = PrimaryRanks::NoRank;
+
+    for hand in parsed_hands {
 
         if hand.primary_rank > highest_hand_rank {
             //update the highest rank
