@@ -99,6 +99,16 @@ fn tiebreak(best_hands: &mut Vec<Hand> ){
 
     let mut highest_secondary_rank = CardValues::NoValue;
 
+    let CARDS_IN_HAND = 5;
+
+    //loop through secondary rank by at index 0, remove all that don't match, loop through index 1....
+
+    for card_index in 0..CARDS_IN_HAND {
+        for hand_index in 0..best_hands.len(){
+            
+            //remove that card if it doesn't match
+        }
+    }
 
 
 }
@@ -186,6 +196,7 @@ fn detect_full_house(hand_to_score: &mut Hand) -> bool {
 
 fn detect_flush(hand_to_score: &mut Hand) -> bool {
 
+    //this can be refactored with a suit count check 
     let mut prior_card = &hand_to_score.cards[0];
 
     for card in &hand_to_score.cards[1..]{
@@ -199,6 +210,7 @@ fn detect_flush(hand_to_score: &mut Hand) -> bool {
 
     hand_to_score.primary_rank = PrimaryRanks::Flush;
 
+    //tiebreaker 
     for card in &hand_to_score.cards{
         hand_to_score.secondary_rank.push(card.value);
     }
@@ -236,7 +248,7 @@ fn detect_straight(hand_to_score: &mut Hand) -> bool {
     }
 
     hand_to_score.primary_rank = PrimaryRanks::Straight;
-    //kicker is the max value, which is the first element
+    //kicker is the max value, which is the first element since the hand is sorted
     hand_to_score.secondary_rank.push(hand_to_score.cards[0].value);
     return true;
 }
@@ -255,7 +267,8 @@ fn detect_three_of_a_kind(hand_to_score: &mut Hand) -> bool{
 
         //iterate through value count - if the count is 2, push only once
 
-        for kicker_index in 0..hand_to_score.value_count.len() {
+        //reverse valu count so we push high cards first
+        for kicker_index in (0..hand_to_score.value_count.len()).rev() {
 
             if hand_to_score.value_count[kicker_index] == 2 {
                 hand_to_score.secondary_rank.push(usize_to_card_value(kicker_index));
@@ -285,8 +298,8 @@ fn detect_two_pair(hand_to_score: &mut Hand) -> bool{
     let mut two_pair_indicies:Vec<usize> = Vec::new();
     let mut kicker_index: usize = 0;
 
-
-    for index in 0..hand_to_score.value_count.len() {
+    //reversing the order of value count
+    for index in (0..hand_to_score.value_count.len()).rev() {
 
         if hand_to_score.value_count[index] == 2 {
             pair_count += 1;
@@ -341,12 +354,12 @@ fn detect_one_pair(hand_to_score: &mut Hand) -> bool{
 
         hand_to_score.primary_rank = PrimaryRanks::OnePair;
 
-        //push the rank of the pair single card
+        //push the rank of the pair single card as first tiebreak
         hand_to_score.secondary_rank.push(usize_to_card_value(one_pair_index));
 
 
-        //push remaining 3 cards
-        for secondary_rank_index in 0..kicker_indecies.len(){
+        //push remaining 3 cards in reverse order (the value count array starts at value 0)
+        for secondary_rank_index in (0..kicker_indecies.len()).rev(){
             hand_to_score.secondary_rank.push(usize_to_card_value(secondary_rank_index));
         }
 
@@ -360,6 +373,8 @@ fn detect_high_card(hand_to_score: &mut Hand) -> bool{
     
     hand_to_score.primary_rank = PrimaryRanks::HighCard;
 
+
+    //cards are already all sorted in decending order 
     for card in &hand_to_score.cards{
         hand_to_score.secondary_rank.push(card.value);
     }
