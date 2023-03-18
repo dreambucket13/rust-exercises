@@ -5,9 +5,10 @@
 pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
     
     //parse hands
-    let mut best_hands: Vec<Hand> = Vec::new();
+
     let mut best_hand_strings: Vec<&'a str> = Vec::new();
     let mut parsed_hands:Vec<Hand> = Vec::new();
+    let num_distinct_card_values = 15;
 
     for hand_input in 0..hands.len() {
 
@@ -18,7 +19,7 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
             Hand {
                 hand_string_ref: raw_hand,
                 cards: Vec::new(),
-                value_count: vec!(0; 14),
+                value_count: vec!(0; num_distinct_card_values),
                 suit_count: vec!(0; 4),
                 primary_rank: PrimaryRanks::NoRank,
                 secondary_rank: Vec::new()
@@ -43,15 +44,15 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
         }
 
-        println!("{:?}", hand.value_count);
+        //println!("{:?}", hand.value_count);
 
         //sort cards by value
 
-        println!("{:?}",hand.cards);
+        //println!("{:?}",hand.cards);
         hand.cards.sort_unstable_by_key(|card| card.value);
         //we want the highest value cards first
         hand.cards.reverse();
-        println!("{:?}",hand.cards);
+        //println!("{:?}",hand.cards);
 
         parsed_hands.push(hand);
 
@@ -71,6 +72,7 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
     //find highest rank
 
     let mut highest_hand_rank = PrimaryRanks::NoRank;
+    let mut best_hands_by_primary: Vec<Hand> = Vec::new();
 
     for hand in parsed_hands {
 
@@ -78,21 +80,21 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
             //update the highest rank
             highest_hand_rank = hand.primary_rank;
             //clear the best hands vec since I found something better
-            best_hands.clear();
+            best_hands_by_primary.clear();
             //push to best hands again
-            best_hands.push(hand);
+            best_hands_by_primary.push(hand);
 
         } else if hand.primary_rank == highest_hand_rank {
             //if it's equal, could be a tie
-            //TODO - handle ties, check secondary rank?
-            best_hands.push(hand);
+
+            best_hands_by_primary.push(hand);
         }
 
     }
 
-    tiebreak(&mut best_hands);
+    let best_hands_after_tiebreak = tiebreak(best_hands_by_primary);
 
-    for hand in best_hands {
+    for hand in best_hands_after_tiebreak {
         best_hand_strings.push(hand.hand_string_ref);
     }
 
@@ -102,40 +104,44 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
 }
 
-fn tiebreak(best_hands: &mut Vec<Hand> ){
-
-    let mut highest_secondary_rank = CardValues::NoValue;
+fn tiebreak(best_hands: Vec<Hand> ) -> Vec<Hand>{
 
     let cards_in_hand = 5;
+    let mut best_hands_after_tiebreak: Vec<Hand> = best_hands.clone();
 
-    //loop through secondary rank by at index 0, remove all that don't match, loop through index 1....
+    if best_hands_after_tiebreak.len() <= 1 {
+        return best_hands_after_tiebreak;
+    }
 
     for card_index in 0..cards_in_hand {
 
-        let mut hands_to_remove: Vec<usize> = Vec::new(); 
+        let mut highest_secondary_rank = CardValues::NoValue;
 
-        for hand_index in 0..best_hands.len(){
+        //first find the highest ranked card in the slot
+
+        for hand_index in 0..best_hands_after_tiebreak.len(){
             
-            if best_hands[hand_index].secondary_rank[card_index] >= highest_secondary_rank{
+            let secondary_rank = best_hands[hand_index].secondary_rank[card_index];
 
-                highest_secondary_rank = best_hands[hand_index].secondary_rank[card_index];
+            if secondary_rank > highest_secondary_rank{
 
-            } else {
+                highest_secondary_rank = secondary_rank;
 
-                hands_to_remove.push(hand_index);
-
-            }
+            } 
             
         }
 
-        //remove hands if they don't pass tiebreak
+        //remove hands that are not the highest rank
 
-        for hand in hands_to_remove{
-            best_hands.remove(hand);
-        }
+        //Remove all elements equal to needle
+        //vec.retain(|x| *x != needle);
 
+        best_hands_after_tiebreak.retain(|x| x.secondary_rank[card_index] == highest_secondary_rank);
 
+    
     }
+
+    best_hands_after_tiebreak
 
 
 }
@@ -278,6 +284,8 @@ fn detect_straight(hand_to_score: &mut Hand) -> bool {
     //kicker is the max value, which is the first element since the hand is sorted
     hand_to_score.secondary_rank.push(hand_to_score.cards[0].value);
     return true;
+
+
 }
 
 fn detect_three_of_a_kind(hand_to_score: &mut Hand) -> bool{
@@ -348,6 +356,8 @@ fn detect_two_pair(hand_to_score: &mut Hand) -> bool{
 
         //now push the single card
         hand_to_score.secondary_rank.push(usize_to_card_value(kicker_index));
+
+        return true;
     }
 
     false
@@ -390,7 +400,7 @@ fn detect_one_pair(hand_to_score: &mut Hand) -> bool{
             hand_to_score.secondary_rank.push(usize_to_card_value(secondary_rank_index));
         }
 
-
+        return true;
     }
 
     false
@@ -400,9 +410,9 @@ fn detect_high_card(hand_to_score: &mut Hand) -> bool{
     
     hand_to_score.primary_rank = PrimaryRanks::HighCard;
 
-
     //cards are already all sorted in decending order 
     for card in &hand_to_score.cards{
+        println!("{:?}",card);
         hand_to_score.secondary_rank.push(card.value);
     }
 
@@ -422,6 +432,7 @@ fn str_to_card_value(str: &str) -> CardValues {
         _ if str.starts_with("7") => return CardValues::SEVEN,
         _ if str.starts_with("8") => return CardValues::EIGHT,
         _ if str.starts_with("9") => return CardValues::NINE,
+        _ if str.starts_with("10") => return CardValues::TEN,
         _ if str.starts_with("J") => return CardValues::JACK,
         _ if str.starts_with("Q") => return CardValues::QUEEN,
         _ if str.starts_with("K") => return CardValues::KING,
@@ -445,10 +456,11 @@ fn usize_to_card_value(index: usize) -> CardValues {
         7 => return CardValues::SEVEN,
         8 => return CardValues::EIGHT,
         9 => return CardValues::NINE,
-        10 => return CardValues::JACK,
-        11 => return CardValues::QUEEN,
-        12 => return CardValues::KING,
-        13 => return CardValues::AceHigh,
+        10 => return CardValues::TEN,
+        11 => return CardValues::JACK,
+        12 => return CardValues::QUEEN,
+        13 => return CardValues::KING,
+        14 => return CardValues::AceHigh,
         _ => return CardValues::NoValue,
 
     };
@@ -531,10 +543,11 @@ enum CardValues{
     SEVEN = 7,
     EIGHT = 8,
     NINE = 9,
-    JACK = 10,
-    QUEEN = 11,
-    KING = 12,
-    AceHigh = 13
+    TEN = 10,
+    JACK = 11,
+    QUEEN = 12,
+    KING = 13,
+    AceHigh = 14
 
 }
 
