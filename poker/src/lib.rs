@@ -16,7 +16,7 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
         let mut hand = 
             Hand {
-                hand_string: raw_hand,
+                hand_string_ref: raw_hand,
                 cards: Vec::new(),
                 value_count: vec!(0; 14),
                 suit_count: vec!(0; 4),
@@ -89,6 +89,12 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
     }
 
+    tiebreak(&mut best_hands);
+
+    for hand in best_hands {
+        best_hand_strings.push(hand.hand_string_ref);
+    }
+
 
     best_hand_strings
 
@@ -99,15 +105,35 @@ fn tiebreak(best_hands: &mut Vec<Hand> ){
 
     let mut highest_secondary_rank = CardValues::NoValue;
 
-    let CARDS_IN_HAND = 5;
+    let cards_in_hand = 5;
 
     //loop through secondary rank by at index 0, remove all that don't match, loop through index 1....
 
-    for card_index in 0..CARDS_IN_HAND {
+    for card_index in 0..cards_in_hand {
+
+        let mut hands_to_remove: Vec<usize> = Vec::new(); 
+
         for hand_index in 0..best_hands.len(){
             
-            //remove that card if it doesn't match
+            if best_hands[hand_index].secondary_rank[card_index] >= highest_secondary_rank{
+
+                highest_secondary_rank = best_hands[hand_index].secondary_rank[card_index];
+
+            } else {
+
+                hands_to_remove.push(hand_index);
+
+            }
+            
         }
+
+        //remove hands if they don't pass tiebreak
+
+        for hand in hands_to_remove{
+            best_hands.remove(hand);
+        }
+
+
     }
 
 
@@ -449,7 +475,7 @@ fn str_to_suit(str: &str) -> Suits {
 #[derive(Debug, Clone)]
 struct Hand<'a> {
 
-    hand_string: &'a str,
+    hand_string_ref: &'a str,
     cards: Vec<Card>,
     value_count: Vec<i32>,
     suit_count: Vec<i32>,
