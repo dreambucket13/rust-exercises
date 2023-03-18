@@ -24,6 +24,8 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
                 primary_rank: PrimaryRanks::NoRank,
                 secondary_rank: Vec::new()
             };
+
+
         
         //build hand
         for card_str in card_raw_strs {
@@ -44,15 +46,14 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
         }
 
-        //println!("{:?}", hand.value_count);
+
 
         //sort cards by value
 
-        //println!("{:?}",hand.cards);
+
         hand.cards.sort_unstable_by_key(|card| card.value);
         //we want the highest value cards first
         hand.cards.reverse();
-        //println!("{:?}",hand.cards);
 
         parsed_hands.push(hand);
 
@@ -92,7 +93,9 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
     }
 
+
     let best_hands_after_tiebreak = tiebreak(best_hands_by_primary);
+
 
     for hand in best_hands_after_tiebreak {
         best_hand_strings.push(hand.hand_string_ref);
@@ -109,19 +112,23 @@ fn tiebreak(best_hands: Vec<Hand> ) -> Vec<Hand>{
     let cards_in_hand = 5;
     let mut best_hands_after_tiebreak: Vec<Hand> = best_hands.clone();
 
-    if best_hands_after_tiebreak.len() <= 1 {
-        return best_hands_after_tiebreak;
-    }
+
 
     for card_index in 0..cards_in_hand {
+
+        if best_hands_after_tiebreak.len() <= 1 {
+            return best_hands_after_tiebreak;
+        }
 
         let mut highest_secondary_rank = CardValues::NoValue;
 
         //first find the highest ranked card in the slot
 
-        for hand_index in 0..best_hands_after_tiebreak.len(){
+        let length = best_hands_after_tiebreak.len();
+
+        for hand_index in 0..length{
             
-            let secondary_rank = best_hands[hand_index].secondary_rank[card_index];
+            let secondary_rank = best_hands_after_tiebreak[hand_index].secondary_rank[card_index];
 
             if secondary_rank > highest_secondary_rank{
 
@@ -166,6 +173,7 @@ fn assign_rank(hand_to_score: &mut Hand){
         
         if hand_detect_function[index](hand_to_score) == true{
             //break out of loop once one of the functions returns true
+            println!("{:?}", hand_to_score.primary_rank);
             break;
         }
 
@@ -268,22 +276,41 @@ fn detect_straight(hand_to_score: &mut Hand) -> bool {
     }
 
     //probably can refactor this to look for 5 1 counts in a row in the value_count array
-    let mut prior_card = &hand_to_score.cards[0];
 
-    for card in &hand_to_score.cards[1..]{
+    let mut straight_count = 0;
+    println!("{:?}", hand_to_score.value_count);
+    for value_index in 2..hand_to_score.value_count.len() {
 
-        if !prior_card.value.is_next(card.value) {
-            return false;
+        if hand_to_score.value_count[value_index] == 1{
+            straight_count += 1;
+        } else {
+            straight_count = 0;
         }
 
-        prior_card = card;
+        if straight_count == 5 {
+            hand_to_score.primary_rank = PrimaryRanks::Straight;
+            //kicker is the max value, which is the first element since the hand is sorted
+            hand_to_score.secondary_rank.push(hand_to_score.cards[0].value);
+            return true;
+        } 
 
     }
 
-    hand_to_score.primary_rank = PrimaryRanks::Straight;
-    //kicker is the max value, which is the first element since the hand is sorted
-    hand_to_score.secondary_rank.push(hand_to_score.cards[0].value);
-    return true;
+    false
+
+    // let mut prior_card = &hand_to_score.cards[0];
+
+    // for card in &hand_to_score.cards[1..]{
+
+    //     if !prior_card.value.is_next(card.value) {
+    //         return false;
+    //     }
+
+    //     prior_card = card;
+
+    // }
+
+    
 
 
 }
@@ -412,7 +439,7 @@ fn detect_high_card(hand_to_score: &mut Hand) -> bool{
 
     //cards are already all sorted in decending order 
     for card in &hand_to_score.cards{
-        println!("{:?}",card);
+        //println!("{:?}",card);
         hand_to_score.secondary_rank.push(card.value);
     }
 
