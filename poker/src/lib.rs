@@ -190,8 +190,22 @@ fn detect_straight_flush(hand_to_score: &mut Hand) -> bool{
 
         //have to override secondary rank, flushes are ranked by all cards
         hand_to_score.secondary_rank.clear();
-        //push high card value to secondary rank (hand is already sorted)
-        hand_to_score.secondary_rank.push(hand_to_score.cards[0].value);
+
+        //push high card value to secondary rank (hand is already sorted), unless ace is low, then 5 is kicker
+        //can maybe optimize to say the ace is now low
+
+        if hand_to_score.value_count[CardValues::AceHigh as usize] == 1 &&
+            hand_to_score.value_count[CardValues::TWO as usize] == 1 &&
+            hand_to_score.value_count[CardValues::THREE as usize] == 1 &&
+            hand_to_score.value_count[CardValues::FOUR as usize] == 1 &&
+            hand_to_score.value_count[CardValues::FIVE as usize] == 1 
+        {
+            hand_to_score.secondary_rank.push(CardValues::FIVE);
+        } else {
+            hand_to_score.secondary_rank.push(hand_to_score.cards[0].value);
+        }
+
+
         return true;
     }
 
@@ -205,9 +219,12 @@ fn detect_four_of_a_kind(hand_to_score: &mut Hand) -> bool {
 
         hand_to_score.primary_rank = PrimaryRanks::FourOfAKind;
 
+        let four_index = hand_to_score.value_count.iter().position(|&x| x == 4).unwrap();
+        hand_to_score.secondary_rank.push(usize_to_card_value(four_index));
+
         //set secondary rank to the value of the remaining card (value count == 1)
-        let index = hand_to_score.value_count.iter().position(|&x| x == 1).unwrap();
-        hand_to_score.secondary_rank.push(usize_to_card_value(index));
+        let kicker_index = hand_to_score.value_count.iter().position(|&x| x == 1).unwrap();
+        hand_to_score.secondary_rank.push(usize_to_card_value(kicker_index));
 
         return true;
     }
@@ -275,8 +292,6 @@ fn detect_straight(hand_to_score: &mut Hand) -> bool {
         return true;
     }
 
-    //probably can refactor this to look for 5 1 counts in a row in the value_count array
-
     let mut straight_count = 0;
     println!("{:?}", hand_to_score.value_count);
     for value_index in 2..hand_to_score.value_count.len() {
@@ -297,21 +312,6 @@ fn detect_straight(hand_to_score: &mut Hand) -> bool {
     }
 
     false
-
-    // let mut prior_card = &hand_to_score.cards[0];
-
-    // for card in &hand_to_score.cards[1..]{
-
-    //     if !prior_card.value.is_next(card.value) {
-    //         return false;
-    //     }
-
-    //     prior_card = card;
-
-    // }
-
-    
-
 
 }
 
@@ -377,12 +377,18 @@ fn detect_two_pair(hand_to_score: &mut Hand) -> bool{
     if pair_count == 2 {
         hand_to_score.primary_rank = PrimaryRanks::TwoPair;
 
-        for secondary_rank_index in 0..two_pair_indicies.len(){
-            hand_to_score.secondary_rank.push(usize_to_card_value(secondary_rank_index));
+        println!("{:?}",two_pair_indicies);
+
+        for secondary_rank_index in 0..two_pair_indicies.len() {
+            let secondary_card = usize_to_card_value(two_pair_indicies[ secondary_rank_index]);
+            hand_to_score.secondary_rank.push(secondary_card);            
+            println!("{:?}",hand_to_score.secondary_rank);
         }
 
         //now push the single card
         hand_to_score.secondary_rank.push(usize_to_card_value(kicker_index));
+
+
 
         return true;
     }
@@ -578,20 +584,3 @@ enum CardValues{
 
 }
 
-impl CardValues {
-
-    fn is_next(self: CardValues, next_card: CardValues) -> bool{
-
-        let current_card_int = self as i32;
-        let next_card_int = next_card as i32;
-
-        if next_card_int - current_card_int == 1 {
-            return true;
-        } else {
-            return false;
-        }
-
-    }
-
-
-}
