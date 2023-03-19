@@ -46,11 +46,7 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
 
         }
 
-
-
         //sort cards by value
-
-
         hand.cards.sort_unstable_by_key(|card| card.value);
         //we want the highest value cards first
         hand.cards.reverse();
@@ -64,11 +60,6 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
     for hand_to_score in &mut parsed_hands {
         assign_rank(hand_to_score);
     }
-
-
-    
-    //push winning hands (can tie)
-
 
     //find highest rank
 
@@ -101,7 +92,6 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
         best_hand_strings.push(hand.hand_string_ref);
     }
 
-
     best_hand_strings
 
 
@@ -111,8 +101,6 @@ fn tiebreak(best_hands: Vec<Hand> ) -> Vec<Hand>{
 
     let cards_in_hand = 5;
     let mut best_hands_after_tiebreak: Vec<Hand> = best_hands.clone();
-
-
 
     for card_index in 0..cards_in_hand {
 
@@ -140,12 +128,8 @@ fn tiebreak(best_hands: Vec<Hand> ) -> Vec<Hand>{
 
         //remove hands that are not the highest rank
 
-        //Remove all elements equal to needle
-        //vec.retain(|x| *x != needle);
-
         best_hands_after_tiebreak.retain(|x| x.secondary_rank[card_index] == highest_secondary_rank);
 
-    
     }
 
     best_hands_after_tiebreak
@@ -158,6 +142,7 @@ fn assign_rank(hand_to_score: &mut Hand){
 
     type HandDetectFunction  = fn(&mut Hand) -> bool;
 
+    //functions are in order of rank
     let hand_detect_function: [HandDetectFunction; 9] = [detect_straight_flush,
                                                         detect_four_of_a_kind,
                                                         detect_full_house,
@@ -192,7 +177,7 @@ fn detect_straight_flush(hand_to_score: &mut Hand) -> bool{
         hand_to_score.secondary_rank.clear();
 
         //push high card value to secondary rank (hand is already sorted), unless ace is low, then 5 is kicker
-        //can maybe optimize to say the ace is now low
+        //can maybe optimize to say the ace is now low.  Would have to adjust hand and resort.
 
         if hand_to_score.value_count[CardValues::AceHigh as usize] == 1 &&
             hand_to_score.value_count[CardValues::TWO as usize] == 1 &&
@@ -294,6 +279,8 @@ fn detect_straight(hand_to_score: &mut Hand) -> bool {
 
     let mut straight_count = 0;
     println!("{:?}", hand_to_score.value_count);
+
+    //start at 2 - 0 is not a valid value, and assuming no ace lows
     for value_index in 2..hand_to_score.value_count.len() {
 
         if hand_to_score.value_count[value_index] == 1{
@@ -327,14 +314,12 @@ fn detect_three_of_a_kind(hand_to_score: &mut Hand) -> bool{
         let index = hand_to_score.value_count.iter().position(|&x| x == 3).unwrap();
         hand_to_score.secondary_rank.push(usize_to_card_value(index));
 
-        //iterate through value count - if the count is 2, push only once
 
-        //reverse valu count so we push high cards first
+        //reverse value count so we push high cards first
         for kicker_index in (0..hand_to_score.value_count.len()).rev() {
 
             if hand_to_score.value_count[kicker_index] == 2 {
                 hand_to_score.secondary_rank.push(usize_to_card_value(kicker_index));
-                break; //pushing only once
             }
 
             if hand_to_score.value_count[kicker_index] == 1 {
@@ -382,13 +367,10 @@ fn detect_two_pair(hand_to_score: &mut Hand) -> bool{
         for secondary_rank_index in 0..two_pair_indicies.len() {
             let secondary_card = usize_to_card_value(two_pair_indicies[ secondary_rank_index]);
             hand_to_score.secondary_rank.push(secondary_card);            
-            println!("{:?}",hand_to_score.secondary_rank);
         }
 
         //now push the single card
         hand_to_score.secondary_rank.push(usize_to_card_value(kicker_index));
-
-
 
         return true;
     }
